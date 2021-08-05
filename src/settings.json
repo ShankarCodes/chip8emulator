@@ -6,7 +6,8 @@
 	"creation_flags": [
 		"HWSURFACE",
 		"DOUBLEBUF",
-		"HWACCEL"
+		"HWACCEL",
+		"THJIS"
 	],
 	"other_creation_flags": [
 		"SCALED"

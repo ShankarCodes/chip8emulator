@@ -135,9 +135,14 @@ class Engine:
                 self.settings['flag'])
             logger.info("Created screen")
             inf = pygame.display.Info()
-            logger.info(f"Acceleration type:{inf.hw}")
-            logger.info(f"Video memory:{inf.video_mem}")
+
+            logger.info("-"*50)
+            logger.info(
+                f"Acceleration type:{'Hardware' if inf.hw >= 1 else 'Software'}")
+            logger.info(
+                f"Video memory:{inf.video_mem if inf.video_mem > 0 else 'UNKNOWN'}")
             pygame.display.set_caption(self.settings['title'])
+            logger.info("-"*50)
             logger.info("Initialized graphics")
 
             logger.info("Creating clock")
@@ -160,6 +165,10 @@ class Engine:
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
                         self.quit()
+
+                keys = pygame.key.get_pressed()
+                if keys[K_x]:
+                    self.quit()
 
                 self.screen.fill(pygame.Color('white'))
                 pygame.display.flip()

@@ -10,7 +10,7 @@ except ModuleNotFoundError:
 
 LEVEL = logging.DEBUG
 LOG_PATH = './logs'
-LOG_FORMAT = "%(asctime)s %(name)-25.20s[%(process)-7d]: [%(levelname)-8s]  %(message)s"
+LOG_FORMAT = "%(asctime)s %(name)-20s[%(process)-7d]: [%(filename)+10s:%(lineno)-4d] %(funcName)15s() [%(levelname)-8s]  %(message)s"
 ALL_LOGS = "all"
 LOG_FORMATTER = logging.Formatter(LOG_FORMAT)
 
