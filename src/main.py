@@ -1,3 +1,12 @@
+try:
+    import pygame
+    from pygame.locals import *
+except Exception as e:
+    logger.exception("Error while importing pygame.")
+    logger.critical("pygame is required to run this game. Exiting now")
+    sys.exit(1)
+
+from emulator import Emulator
 import os
 import sys
 import json
@@ -5,12 +14,9 @@ import json
 from log import create_logger
 logger = create_logger(__name__)
 
-try:
-    import pygame
-except Exception as e:
-    logger.exception("Error while importing pygame.")
-    logger.critical("pygame is required to run this game. Exiting now")
-    sys.exit(1)
+
+# TODO: Make the config file loading, case independent.
+# TODO: Also if the required variable is missing, choose the default one.
 
 DEFAULT = '''
 {
@@ -62,7 +68,11 @@ class Engine:
             logger.info("settings.json found ... loading settings")
             settings_file = open(get_path("settings.json"), "r")
             try:
-                settings = json.loads(settings_file.read())
+                settings = json.loads(DEFAULT)
+                load_settings = json.loads(settings_file.read())
+                # Removes "", None, etc.
+                load_settings = {k: v for k, v in load_settings.items() if v}
+                settings.update(load_settings)
 
             except:
                 logger.exception(
@@ -93,7 +103,7 @@ class Engine:
         for flag in settings.get('creation_flags', []):
             val = FLAGS.get(flag, None)
             if val is None:
-                logger.warn(f'Flag {flag} not found, ignoring')
+                logger.warning(f'Flag {flag} not found, ignoring')
                 val = 0
             flg = flg | val
 
@@ -102,7 +112,8 @@ class Engine:
 
     def init(self):
         try:
-            logger.info("Game details")
+            logger.info("Engine details")
+            logger.info("Loaded Settings -")
             logger.info("-"*50)
             logger.info(f"Width: {self.settings['width']}")
             logger.info(f"Height: {self.settings['height']}")
@@ -111,8 +122,12 @@ class Engine:
             logger.info(
                 f"Creation Flags:{', '.join(self.settings['creation_flags'])}")
             logger.info("-"*50)
-            logger.info("Initializing engine")
+
+            logger.info("Initializing pygame")
             pygame.init()
+            logger.info("Initialized pygame")
+
+            logger.info("Initializing graphics")
             logger.info("Creating screen")
             self.screen = pygame.display.set_mode(
                 (self.settings['width'],
@@ -123,23 +138,41 @@ class Engine:
             logger.info(f"Acceleration type:{inf.hw}")
             logger.info(f"Video memory:{inf.video_mem}")
             pygame.display.set_caption(self.settings['title'])
+            logger.info("Initialized graphics")
+
+            logger.info("Creating clock")
             self.clock = pygame.time.Clock()
             logger.info("Created clock")
+
+            logger.info("Creating emulator")
+            self.emulator = Emulator(self.settings)
+            logger.info(f'Emulator:{self.emulator.name}')
+            logger.info(f'Emulator version:{self.emulator.version}')
+            logger.info("Created emulator")
         except Exception as e:
             logger.exception("An error occured while Initializing")
+            self.quit(-1)
 
     def run(self):
         try:
-            pass
+            logger.info("Starting emulator....")
+            while True:
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        self.quit()
+
+                self.screen.fill(pygame.Color('white'))
+                pygame.display.flip()
+                dt = self.clock.tick(self.settings['fps'])
         except Exception as e:
             logger.exception(
                 f"An error occured while running the emulator!")
 
-    def quit(self):
+    def quit(self, exit_code=0):
         logger.info(
             f"Exiting....")
         pygame.quit()
-        sys.exit(0)
+        sys.exit(exit_code)
 
 
 if __name__ == '__main__':
@@ -147,4 +180,3 @@ if __name__ == '__main__':
     engine.load_settings()
     engine.init()
     engine.run()
-    engine.quit()
