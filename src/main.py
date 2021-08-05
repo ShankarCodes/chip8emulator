@@ -6,12 +6,12 @@ except Exception as e:
     logger.critical("pygame is required to run this game. Exiting now")
     sys.exit(1)
 
-from emulator import Emulator
+from .emulator import Emulator
 import os
 import sys
 import json
 
-from log import create_logger
+from .log import create_logger
 logger = create_logger(__name__)
 
 
