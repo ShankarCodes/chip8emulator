@@ -73,3 +73,28 @@ def test_add_vy_to_vx_overflow(emu: emulator.Emulator):
     assert emu.V[4] == 81
     assert emu.V[0xF] == 1
     assert emu.V[3] == 56
+
+
+def test_sub_vy_from_vx(emu: emulator.Emulator):
+    # Subtract Vy from Vx , Vx = Vx - Vy
+    # Test for no overflow condition
+    for i in range(20, 30):
+        for j in range(0, 10):
+            emu.V[3] = i
+            emu.V[5] = j
+
+            emu.execute_opcode(0x8355)
+
+            assert emu.V[3] == i - j
+            assert emu.V[5] == j
+            assert emu.V[0xF] == 0
+
+
+def test_sub_vy_from_vx_overflow(emu: emulator.Emulator):
+    emu.V[3] = 81
+    emu.V[4] = 231
+
+    emu.execute_opcode(0x8345)
+    assert emu.V[4] == 231
+    assert emu.V[0xF] == 1
+    assert emu.V[3] == 106

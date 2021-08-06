@@ -204,7 +204,15 @@ class Emulator:
             if K == 5:
                 logger.debug(f'{hexrepr(op)} | V[{X}] -= V[{Y}]')
                 # self.Vx = self.Vx - self.Vy
-                self.V[X] = self.V[X] - self.V[Y]
+                logger.debug(
+                    f'{self.V[X]}, {self.V[Y]} = {self.V[X]-self.V[Y]}')
+                if self.V[X] > self.V[Y]:
+                    self.V[0xF] = 0
+                    self.V[X] = self.V[X] - self.V[Y]
+                else:
+                    self.V[0xF] = 1
+                    self.V[X] = self.V[X] - self.V[Y] + 256
+
             if K == 6:
                 logger.debug(f'{hexrepr(op)} | V[{X}] >> 1')
                 # self.Vx = self.Vx >> 1
