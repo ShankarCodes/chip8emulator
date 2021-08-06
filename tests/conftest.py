@@ -5,6 +5,7 @@ from src import emulator
 from src import log
 
 
+@pytest.fixture
 def create_emulator():
     e = emulator.Emulator(None)
 
@@ -16,14 +17,19 @@ def create_emulator():
     def close(opcode):
         sys.exit(opcode)
 
+    @e.external('halt')
+    def halt(opcode):
+        emulator.logger.info("Got halt instruction!")
+        sys.exit(0)
+
     e.init_optable()
 
     return e
 
 
 @pytest.fixture
-def emu():
-    e = create_emulator()
+def emu(create_emulator):
+    e = create_emulator
     e.V[3] = 211
     e.V[5] = 181
     return e
