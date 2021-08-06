@@ -22,7 +22,7 @@ def test_jump(emu: emulator.Emulator):
 
 def test_call(emu: emulator.Emulator):
     # Tests that the emulator can call subroutines and return back
-    # Also check for edge cases such as stack overflow
+    # Checks if call works
 
     assert emu.stack == []
     # Calls subroutine at memory location 0x308

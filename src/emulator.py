@@ -49,8 +49,8 @@ class Emulator:
             0x0000: self.OP_KKK,
             0x1000: self.OP_NNN,
             0x2000: self.OP_NNN,
-            0x3000: self.OP_XYN,
-            0x4000: self.OP_XYN,
+            0x3000: self.OP_XNN,
+            0x4000: self.OP_XNN,
             0x5000: self.OP_XYK,
             0x6000: self.OP_XYN,
             0x7000: self.OP_XNN,
@@ -136,7 +136,16 @@ class Emulator:
         pass
 
     def OP_XNN(self, op):
-        pass
+        S = (op & 0xF000) >> 12
+        X = (op & 0x0F00) >> 8
+        NN = (op & 0x00FF)
+
+        if S == 3:
+            if self.V[X] == NN:
+                self.pc_increment = 4
+        if S == 4:
+            if self.V[X] != NN:
+                self.pc_increment = 4
 
     def OP_XYK(self, op):
         S = (op & 0xF000) >> 12
@@ -144,34 +153,46 @@ class Emulator:
         Y = (op & 0x00F0) >> 4
         K = (op & 0x000F)
 
+        if S == 5 and K == 0:
+            if self.V[X] == self.V[Y]:
+                self.pc_increment = 4
+        if S == 9 and K == 0:
+            if self.V[X] != self.V[Y]:
+                self.pc_increment = 4
+
         if S == 8:
             if K == 0:
                 # Assignment
-                V[X] = V[Y]
+                self.V[X] = self.V[Y]
             if K == 1:
-                # Vx = Vx | Vy
-                V[X] = V[X] | V[Y]
+                # self.Vx = self.Vx | self.Vy
+                self.V[X] = self.V[X] | self.V[Y]
             if K == 2:
-                # Vx = Vx & Vy
-                V[X] = V[X] & V[Y]
+                # self.Vx = self.Vx & self.Vy
+                self.V[X] = self.V[X] & self.V[Y]
             if K == 3:
-                # Vx = Vx ^ Vy
-                V[X] = V[X] ^ V[Y]
+                # self.Vx = self.Vx ^ self.Vy
+                self.V[X] = self.V[X] ^ self.V[Y]
             if K == 4:
-                # Vx = Vx + Vy
-                V[X] = V[X] + V[Y]
+                # self.Vx = self.Vx + self.Vy
+                self.V[X] = self.V[X] + self.V[Y]
             if K == 5:
-                # Vx = Vx - Vy
-                V[X] = V[X] - V[Y]
+                # self.Vx = self.Vx - self.Vy
+                self.V[X] = self.V[X] - self.V[Y]
             if K == 6:
-                # Vx = Vx >> 1
-                V[X] = V[X] >> 1
+                # self.Vx = self.Vx >> 1
+                # Stores LSB in VF (for right shift)
+                self.V[0xF] = self.V[X] & 1
+                self.V[X] = self.V[X] >> 1
             if K == 7:
-                # Vx = Vx - Vy
-                V[X] = V[Y] - V[X]
+                # self.Vx = self.Vx - self.Vy
+                self.V[X] = self.V[Y] - self.V[X]
             if K == 0xE:
-                # Vx = Vx << 1
-                V[X] = V[X] << 1
+                # self.Vx = self.Vx << 1
+                # Stores MSB in VF
+                self.V[0xF] = (self.V[X] & 0b10000000) >> 7
+                # The result is masked with 0xFF (255) so that it remains within a byte.
+                self.V[X] = (self.V[X] << 1) & 0xFF
 
     def OP_XYN(self, op):
         pass
