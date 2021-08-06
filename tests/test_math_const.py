@@ -98,3 +98,13 @@ def test_sub_vy_from_vx_overflow(emu: emulator.Emulator):
     assert emu.V[4] == 231
     assert emu.V[0xF] == 1
     assert emu.V[3] == 106
+
+
+def test_sub_vx_from_vy(emu: emulator.Emulator):
+    emu.V[3] = 231
+    emu.V[4] = 81
+
+    emu.execute_opcode(0x8347)
+    assert emu.V[3] == 106
+    assert emu.V[0xF] == 1
+    assert emu.V[4] == 81

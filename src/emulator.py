@@ -204,8 +204,8 @@ class Emulator:
             if K == 5:
                 logger.debug(f'{hexrepr(op)} | V[{X}] -= V[{Y}]')
                 # self.Vx = self.Vx - self.Vy
-                logger.debug(
-                    f'{self.V[X]}, {self.V[Y]} = {self.V[X]-self.V[Y]}')
+                # logger.debug(
+                #    f'{self.V[X]}, {self.V[Y]} = {self.V[X]-self.V[Y]}')
                 if self.V[X] > self.V[Y]:
                     self.V[0xF] = 0
                     self.V[X] = self.V[X] - self.V[Y]
@@ -222,7 +222,12 @@ class Emulator:
             if K == 7:
                 # self.Vx = self.Vy- self.Vx
                 logger.debug(f'{hexrepr(op)} | V[{Y}] - V[{X}]')
-                self.V[X] = self.V[Y] - self.V[X]
+                if self.V[Y] > self.V[X]:
+                    self.V[0xF] = 0
+                    self.V[X] = self.V[Y] - self.V[X]
+                else:
+                    self.V[0xF] = 1
+                    self.V[X] = self.V[Y] - self.V[X] + 256
             if K == 0xE:
                 # self.Vx = self.Vx << 1
                 # Stores MSB in VF

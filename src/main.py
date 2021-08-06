@@ -151,6 +151,11 @@ class Engine:
 
             logger.info("Creating emulator")
             self.emulator = Emulator(self.settings)
+
+            @self.emulator.external('close')
+            def close(opcode):
+                self.quit(exit_code=opcode)
+            self.emulator.init_optable()
             logger.info(f'Emulator:{self.emulator.name}')
             logger.info(f'Emulator version:{self.emulator.version}')
             logger.info("Created emulator")
@@ -159,6 +164,11 @@ class Engine:
             self.quit(-1)
 
     def run(self):
+
+        rom = [0x1208, 0x9090, 0xf090, 0x9000, 0x00e0,
+               0xa202, 0x6205, 0x6304, 0xd234, 0x1212]
+        for i in rom:
+            self.emulator.execute_opcode(i)
         try:
             logger.info("Starting emulator....")
             while True:
