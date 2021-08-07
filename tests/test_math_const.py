@@ -108,3 +108,12 @@ def test_sub_vx_from_vy(emu: emulator.Emulator):
     assert emu.V[3] == 106
     assert emu.V[0xF] == 1
     assert emu.V[4] == 81
+
+
+def test_random_number(emu: emulator.Emulator):
+    for i in range(20):
+        emu.execute_opcode(0xC345)
+        if emu.V[3] != 0:
+            break
+    # This test may potentially fail when the random number becomes 0
+    assert emu.V[3] != 0

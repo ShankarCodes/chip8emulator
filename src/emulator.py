@@ -1,3 +1,4 @@
+import random
 import sys
 from .log import create_logger
 import base64
@@ -179,6 +180,32 @@ class Emulator:
                 # Limit to 16 bits
                 self.I = (self.I + self.V[X]) & 0xFFFF
 
+            if KK == 0x29:
+                logger.debug(f'{hexrepr(op)} | I = sprite_addr(V[{X}])')
+                self.I = 5*self.V[X]
+
+            if KK == 0x33:
+                # Calculates BCD of value at register V[X]
+                # TODO: Check for edge cases, i.e when I = 4096
+                logger.debug(
+                    f'{hexrepr(op)} | I{self.I}, I+1, I+2 = BCD(V{X})')
+                self.memory[self.I] = (self.V[X] // 100) % 10
+                self.memory[self.I+1] = (self.V[X] // 10) % 10
+                self.memory[self.I+2] = (self.V[X]) % 10
+
+            if KK == 0x55:
+                # Dumps V0 - VX to memory address I
+                logger.debug(
+                    f'{hexrepr(op)} | Dump registers V0-V{X} to {self.I}')
+                for i in range(0, X+1):
+                    self.memory[self.I+i] = self.V[i]
+            if KK == 0x65:
+                # Loads V0 - VX from memory address I
+                logger.debug(
+                    f'{hexrepr(op)} | Load registers V0-V{X} from {self.I}')
+                for i in range(0, X+1):
+                    self.V[i] = self.memory[self.I+i]
+
     def OP_XNN(self, op):
         S = (op & 0xF000) >> 12
         X = (op & 0x0F00) >> 8
@@ -198,6 +225,8 @@ class Emulator:
         if S == 7:
             logger.debug(f'{hexrepr(op)} | V[{X}] = V[{X}] + {NN}')
             self.V[X] = (self.V[X] + NN) & 0xff
+        if S == 0xC:
+            self.V[X] = random.randint(0, 255) & NN
 
     def OP_XYK(self, op):
         S = (op & 0xF000) >> 12

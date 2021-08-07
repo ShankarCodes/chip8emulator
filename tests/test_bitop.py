@@ -28,3 +28,26 @@ def test_right_shift(emu: emulator.Emulator):
     emu.execute_opcode(0x8306)
     assert emu.V[0xF] == 211 & 1
     assert emu.V[3] == 211 >> 1
+
+
+def test_bcd(emu: emulator.Emulator):
+    emu.V[2] = 164
+    emu.I = 100
+    emu.execute_opcode(0xF233)
+    assert emu.memory[100] == 1
+    assert emu.memory[101] == 6
+    assert emu.memory[102] == 4
+
+    emu.V[2] = 219
+    emu.I = 100
+    emu.execute_opcode(0xF233)
+    assert emu.memory[100] == 2
+    assert emu.memory[101] == 1
+    assert emu.memory[102] == 9
+
+    emu.V[2] = 0
+    emu.I = 100
+    emu.execute_opcode(0xF233)
+    assert emu.memory[100] == 0
+    assert emu.memory[101] == 0
+    assert emu.memory[102] == 0
