@@ -1,5 +1,6 @@
 import sys
 from .log import create_logger
+import base64
 
 logger = create_logger(__name__)
 
@@ -33,6 +34,8 @@ class Emulator:
         self.stack_pointer = -1
         self.is_init = False
         self.memory = bytearray(4096)
+        self.fontset = None
+        self.font = None
 
         # External functions, related to graphics, input, etc.
         self.ext_functions = {}
@@ -71,7 +74,30 @@ class Emulator:
             # Simple halt function, for debugging purpose
             0x0FFF: self.ext_functions.get('halt', notimpl)
         }
+
+        default_fontset = '8JCQkPAgYCAgcPAQ8IDw8BDwEPCQkPAQEPCA8BDw8IDwkPDwECBAQPCQ8JDw8JDwEPDwkPCQkOCQ4JDg8ICAgPDgkJCQ4PCA8IDw8IDwgIA='
+        default_font = base64.b64decode(default_fontset)
+
+        fontset = self.settings.get('fontset')
+        if fontset is None:
+            logger.warning(
+                'No fontset found in settings!, Using default fontset')
+            self.font = default_font
+        else:
+            try:
+                self.font = base64.b64decode(fontset)
+            except Exception as e:
+                logger.warning(
+                    'Error while reading fontset from settings, using default one')
+                self.font = default_font
+
+        self.load_to_memory(self.font, offset=0)
+
         self.is_init = True
+
+    def load_to_memory(self, array_of_bytes, offset=0x200):
+        # TODO: Add checks for out of bounds memory access, i.e >= 4096
+        self.memory[offset: offset + len(array_of_bytes)] = array_of_bytes
 
     def execute_opcode(self, opcode):
         #logger.debug(f'{hexrepr(opcode)} | ')
@@ -132,6 +158,10 @@ class Emulator:
             self.stack.append(self.pc)
             self.pc = NNN
             self.pc_increment = 0
+        if K == 0xA:
+            # Sets the value of I = NNN
+            logger.debug(f'{hexrepr(op)} | I = {hexrepr(NNN)}')
+            self.I = NNN
         if K == 0xB:
             # PC = V0 + NNN
             logger.debug(f'{hexrepr(op)} | PC = V0 + {hexrepr(NNN)}')
@@ -139,7 +169,15 @@ class Emulator:
             self.pc_increment = 0
 
     def OP_XKK(self, op):
-        pass
+        S = (op & 0xF000) >> 12
+        X = (op & 0x0F00) >> 8
+        KK = (op & 0x00FF)
+
+        if S == 0xF:
+            if KK == 0x1E:
+                logger.debug(f'{hexrepr(op)} | I += V{X}')
+                # Limit to 16 bits
+                self.I = (self.I + self.V[X]) & 0xFFFF
 
     def OP_XNN(self, op):
         S = (op & 0xF000) >> 12
@@ -257,7 +295,8 @@ class Emulator:
 
 
 if __name__ == '__main__':
-    e = Emulator(None)
+    e = Emulator(
+        {'fontset': '8JCQkPAgYCAgcPAQ8IDw8BDwEPCQkPAQEPCA8BDw8IDwkPDwECBAQPCQ8JDw8JDwEPDwkPCQkOCQ4JDg8ICAgPDgkJCQ4PCA8IDw8IDwgIA='})
 
     @e.external('clear')
     def clear_display(opcode):

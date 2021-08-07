@@ -7,7 +7,8 @@ from src import log
 
 @pytest.fixture
 def create_emulator():
-    e = emulator.Emulator(None)
+    e = emulator.Emulator(
+        {'fontset': '8JCQkPAgYCAgcPAQ8IDw8BDwEPCQkPAQEPCA8BDw8IDwkPDwECBAQPCQ8JDw8JDwEPDwkPCQkOCQ4JDg8ICAgPDgkJCQ4PCA8IDw8IDwgIA='})
 
     @e.external('clear')
     def clear_display(opcode):

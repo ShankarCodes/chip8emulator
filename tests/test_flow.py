@@ -100,7 +100,7 @@ def test_return_no_jumps(emu: emulator.Emulator):
     assert exc.value.code == -3
 
 
-def test_jump_to_NNN(emu: emulator.Emulator):
+def test_jump_to_V0_plus_NNN(emu: emulator.Emulator):
     # PC = V0 + NNN
     assert emu.pc == 0x200
     emu.V[0] = 121
