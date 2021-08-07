@@ -1,3 +1,4 @@
+import base64
 from src import emulator
 
 
@@ -42,6 +43,39 @@ def test_default_font_loading():
         0xF0, 0x80, 0xF0, 0x80, 0xF0, 0xF0, 0x80, 0xF0, 0x80, 0x80, ]
     for i in range(0, 80):
         assert emu.memory[i] == fontset[i]
+
+
+def test_loading_font_from_settings():
+    test_font = base64.b64encode(bytearray(
+        [0x20, 0x10, 0x13, 0xaa, 0xea, 0x17, 0x00, 0x1, 0xff, 0x37, 0x6d])).decode('utf-8')
+    emu = emulator.Emulator({
+        'fontset': test_font
+    })
+    emu.init_optable()
+    offset = 0
+    assert emu.memory[offset + 0] == 0x20
+    assert emu.memory[offset + 1] == 0x10
+    assert emu.memory[offset + 2] == 0x13
+    assert emu.memory[offset + 3] == 0xaa
+    assert emu.memory[offset + 4] == 0xea
+    assert emu.memory[offset + 5] == 0x17
+    assert emu.memory[offset + 6] == 0x00
+    assert emu.memory[offset + 7] == 0x01
+    assert emu.memory[offset + 8] == 0xff
+    assert emu.memory[offset + 9] == 0x37
+    assert emu.memory[offset + 10] == 0x6d
+
+
+def test_font_loading_other_memory_unchanged():
+    test_font = base64.b64encode(bytearray(
+        [0x20, 0x10, 0x13, 0xaa, 0xea, 0x17, 0x00, 0x1, 0xff, 0x37, 0x6d])).decode('utf-8')
+    emu = emulator.Emulator({
+        'fontset': test_font
+    })
+    emu.init_optable()
+    assert emu.memory[11:] == bytearray(4085)
+    for i in range(11, 4096):
+        assert emu.memory[i] == 0
 
 
 def test_setting_I(emu: emulator.Emulator):
