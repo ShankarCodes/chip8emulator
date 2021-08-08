@@ -45,7 +45,8 @@ def get_path(*args):
     """
     Gets the path relative to the script.
     """
-    return os.path.join(os.path.abspath(os.path.dirname(__file__)), *args)
+    # return os.path.join(os.path.abspath(os.path.dirname(__file__)), *args)
+    return os.path.join(os.getcwd(), *args)
 
 
 class Engine:

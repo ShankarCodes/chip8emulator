@@ -1,0 +1,22 @@
+{
+	"width": 640,
+	"height": 320,
+	"fps": 60,
+	"title": "Chip-8 Emulator",
+	"creation_flags": [
+		"HWSURFACE",
+		"DOUBLEBUF",
+		"HWACCEL",
+		"THJIS"
+	],
+	"other_creation_flags": [
+		"SCALED"
+	],
+	"exit_on_error": false,
+	"show_grids": true,
+	"tile_size": 10,
+	"tile_x": 64,
+	"tile_y": 32,
+	"speed": 10,
+	"fontset": "8JCQkPAgYCAgcPAQ8IDw8BDwEPCQkPAQEPCA8BDw8IDwkPDwECBAQPCQ8JDw8JDwEPDwkPCQkOCQ4JDg8ICAgPDgkJCQ4PCA8IDw8IDwgIA="
+}
