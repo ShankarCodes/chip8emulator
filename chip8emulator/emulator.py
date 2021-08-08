@@ -101,6 +101,7 @@ class Emulator:
 
     def load_to_memory(self, array_of_bytes, offset=0x200):
         # TODO: Add checks for out of bounds memory access, i.e >= 4096
+        logger.debug(array_of_bytes)
         self.memory[offset: offset + len(array_of_bytes)] = array_of_bytes
 
     def execute_opcode(self, opcode):
@@ -326,12 +327,13 @@ class Emulator:
                 self.V[X] = (self.V[X] << 1) & 0xFF
 
     def OP_XYN(self, op):
-        pass
+        # Opcode for drawing the sprite. DXYN
+        self.ext_functions.get('draw', notimpl)(op)
 
     # Sub functions
     def OP_RETURN(self, op):
         try:
-            logger.info('Return')
+            logger.debug('Return')
             logger.debug(f'{hexrepr(self.pc)} | {hexrepr(op)} | Return')
             self.stack_pointer -= 1
             self.pc = self.stack.pop()

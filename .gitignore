@@ -142,3 +142,4 @@ venv/
 workspace.code-workspace
 logs/
 venv
+other_roms/
