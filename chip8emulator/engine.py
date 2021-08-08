@@ -182,7 +182,7 @@ class Engine:
                 y = self.emulator.V[Y]
                 N = (opcode & 0x000F)
                 # Draws N+1 lines
-                for i in range(N+1):
+                for i in range(N):
                     line = self.emulator.memory[self.emulator.I + i]
                     self.setPixel(x + 0, y+i, (line & 0x80) >> 7)
                     self.setPixel(x + 1, y+i, (line & 0x40) >> 6)
@@ -205,14 +205,18 @@ class Engine:
     def setPixel(self, x, y, val):
         # 64x32 array
         # width of row * row index + column index
-        self.graphic_memory[y*64 + x] = val
+        if self.graphic_memory[y*64 + x] == 1 and val == 1:
+            self.graphic_memory[y*64 + x] = 0
+
+        if self.graphic_memory[y*64 + x] == 0 and val == 1:
+            self.graphic_memory[y*64 + x] = 1
 
     def render_tiles(self):
-        for i in range(64):
-            for j in range(32):
-                if self.graphic_memory[j*64 + i] == 1:
+        for x in range(64):
+            for y in range(32):
+                if self.graphic_memory[y*64 + x] != 0:
                     pygame.draw.rect(self.screen, pygame.Color(
-                        'white'), (i*self.tile_size, j*self.tile_size, self.tile_size, self.tile_size))
+                        'white'), (x*self.tile_size, y*self.tile_size, self.tile_size, self.tile_size))
 
     def run(self, rompath):
         """
