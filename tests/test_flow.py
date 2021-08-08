@@ -1,8 +1,8 @@
 import pytest
-from src import emulator
+from chip8emulator import Emulator
 
 
-def test_jump(emu: emulator.Emulator):
+def test_jump(emu: Emulator):
     # Tests jump statement, i.e goto
     assert emu.pc == 0x0200
     assert emu.pc_increment == 2
@@ -20,7 +20,7 @@ def test_jump(emu: emulator.Emulator):
     assert emu.pc == 0x378 + 2
 
 
-def test_call(emu: emulator.Emulator):
+def test_call(emu: Emulator):
     # Tests that the emulator can call subroutines and return back
     # Checks if call works
 
@@ -48,7 +48,7 @@ def test_call(emu: emulator.Emulator):
     assert emu.stack == [0x200, 0x30c]
 
 
-def test_call_stack_overflow(emu: emulator.Emulator):
+def test_call_stack_overflow(emu: Emulator):
     # Maximum of 5 jumps
     emu.MAX_STACK_SIZE = 5
     emu.execute_opcode(0x2308)
@@ -61,7 +61,7 @@ def test_call_stack_overflow(emu: emulator.Emulator):
     assert exc.value.code == -2
 
 
-def test_return(emu: emulator.Emulator):
+def test_return(emu: Emulator):
     emu.execute_opcode(0x2308)
     emu.execute_opcode(0x2408)
     # Return
@@ -92,7 +92,7 @@ def test_return(emu: emulator.Emulator):
     assert emu.stack == []
 
 
-def test_return_no_jumps(emu: emulator.Emulator):
+def test_return_no_jumps(emu: Emulator):
     assert emu.stack_pointer == -1
     assert emu.stack == []
     with pytest.raises(SystemExit) as exc:
@@ -100,7 +100,7 @@ def test_return_no_jumps(emu: emulator.Emulator):
     assert exc.value.code == -3
 
 
-def test_jump_to_V0_plus_NNN(emu: emulator.Emulator):
+def test_jump_to_V0_plus_NNN(emu: Emulator):
     # PC = V0 + NNN
     assert emu.pc == 0x200
     emu.V[0] = 121

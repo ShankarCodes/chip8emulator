@@ -1,10 +1,10 @@
 import os
 import base64
-from src import emulator
+from chip8emulator import Emulator
 
 
 def test_initialization():
-    emu = emulator.Emulator({})
+    emu = Emulator({})
     assert len(emu.stack) == 0
     assert emu.pc == 0x200
     assert emu.pc_increment == 2
@@ -29,7 +29,7 @@ def test_initialization():
 
 
 def test_default_font_loading():
-    emu = emulator.Emulator({})
+    emu = Emulator({})
     assert emu.fontset is None
     emu.init_optable()
 
@@ -49,7 +49,7 @@ def test_default_font_loading():
 def test_loading_font_from_settings():
     test_font = base64.b64encode(bytearray(
         [0x20, 0x10, 0x13, 0xaa, 0xea, 0x17, 0x00, 0x1, 0xff, 0x37, 0x6d])).decode('utf-8')
-    emu = emulator.Emulator({
+    emu = Emulator({
         'fontset': test_font
     })
     emu.init_optable()
@@ -70,7 +70,7 @@ def test_loading_font_from_settings():
 def test_font_loading_other_memory_unchanged():
     test_font = base64.b64encode(bytearray(
         [0x20, 0x10, 0x13, 0xaa, 0xea, 0x17, 0x00, 0x1, 0xff, 0x37, 0x6d])).decode('utf-8')
-    emu = emulator.Emulator({
+    emu = Emulator({
         'fontset': test_font
     })
     emu.init_optable()
@@ -79,7 +79,7 @@ def test_font_loading_other_memory_unchanged():
         assert emu.memory[i] == 0
 
 
-def test_rom_loading(emu: emulator.Emulator):
+def test_rom_loading(emu: Emulator):
     rombytes = b""
     with open(os.path.join('roms', 'TEST_ROM_DISPLAY_A'), 'rb') as rom:
         rombytes = rom.read()
@@ -106,14 +106,14 @@ def test_rom_loading(emu: emulator.Emulator):
     assert emu.memory[0x20e:] == bytearray(0xfff - 0x20e + 1)
 
 
-def test_setting_I(emu: emulator.Emulator):
+def test_setting_I(emu: Emulator):
     emu.execute_opcode(0xA217)
     assert emu.I == 0x217
     emu.execute_opcode(0xA0be)
     assert emu.I == 0x0be
 
 
-def test_add_V_x_to_I(emu: emulator.Emulator):
+def test_add_V_x_to_I(emu: Emulator):
     emu.V[2] = 8
     emu.V[3] = 12
     emu.execute_opcode(0xF21E)
@@ -121,7 +121,7 @@ def test_add_V_x_to_I(emu: emulator.Emulator):
     assert emu.I == 20
 
 
-def test_setting_I_to_sprite_address(emu: emulator.Emulator):
+def test_setting_I_to_sprite_address(emu: Emulator):
     emu.V[3] = 0xA
     emu.execute_opcode(0xf329)
     assert emu.I == 50
@@ -132,7 +132,7 @@ def test_setting_I_to_sprite_address(emu: emulator.Emulator):
 
 
 def test_dumping_registers():
-    emu = emulator.Emulator({})
+    emu = Emulator({})
     emu.init_optable()
     emu.I = 100
     emu.V[0] = 7
@@ -155,7 +155,7 @@ def test_dumping_registers():
 
 
 def test_loading_registers():
-    emu = emulator.Emulator({})
+    emu = Emulator({})
     emu.init_optable()
     emu.memory[99] = 65
     emu.memory[100] = 17
@@ -180,13 +180,13 @@ def test_loading_registers():
         assert emu.V[i] == 0
 
 
-def test_execution_ends_when_pc_greater_than_memory(create_emulator: emulator.Emulator):
+def test_execution_ends_when_pc_greater_than_memory(create_emulator: Emulator):
     while create_emulator.execute_opcode_from_memory():
         pass
     assert create_emulator.pc == 4096
 
 
-def test_execute_opcode_from_memory(create_emulator: emulator.Emulator):
+def test_execute_opcode_from_memory(create_emulator: Emulator):
     # Test some basic setting of registers
     create_emulator.load_to_memory(
         bytearray([0x61, 0x37, 0x62, 0x45, 0x63, 0x1a]))

@@ -1,7 +1,7 @@
-from src import emulator
+from chip8emulator import Emulator
 
 
-def test_VX_equals_NN(emu: emulator.Emulator):
+def test_VX_equals_NN(emu: Emulator):
     # Test jump, i.e V[X] == NN
     emu.V[2] = 19  # 0x13
     emu.execute_opcode(0x3213)
@@ -14,7 +14,7 @@ def test_VX_equals_NN(emu: emulator.Emulator):
     assert emu.pc == 0x206
 
 
-def test_VX_not_equals_NN(emu: emulator.Emulator):
+def test_VX_not_equals_NN(emu: Emulator):
     emu.V[2] = 19  # 0x13
 
     # Test no jump, i.e V[X] == NN
@@ -28,7 +28,7 @@ def test_VX_not_equals_NN(emu: emulator.Emulator):
     assert emu.pc == 0x206
 
 
-def test_VX_equals_VY(emu: emulator.Emulator):
+def test_VX_equals_VY(emu: Emulator):
     emu.V[2] = 19
     emu.V[8] = 19
     emu.V[9] = 12
@@ -44,7 +44,7 @@ def test_VX_equals_VY(emu: emulator.Emulator):
     assert emu.pc == 0x206
 
 
-def test_VX_not_equals_VY(emu: emulator.Emulator):
+def test_VX_not_equals_VY(emu: Emulator):
     emu.V[2] = 19
     emu.V[8] = 19
     emu.V[9] = 12

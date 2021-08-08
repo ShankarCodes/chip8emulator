@@ -1,13 +1,13 @@
 import logging
 import sys
 import pytest
-from src import emulator
-from src import log
+from chip8emulator import Emulator
+from chip8emulator import log
 
 
 @pytest.fixture
 def create_emulator():
-    e = emulator.Emulator(
+    e = Emulator(
         {'fontset': '8JCQkPAgYCAgcPAQ8IDw8BDwEPCQkPAQEPCA8BDw8IDwkPDwECBAQPCQ8JDw8JDwEPDwkPCQkOCQ4JDg8ICAgPDgkJCQ4PCA8IDw8IDwgIA='})
 
     @e.external('clear')

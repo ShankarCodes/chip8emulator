@@ -1,7 +1,7 @@
-from src import emulator
+from chip8emulator import Emulator
 
 
-def test_set_register_to_n(emu: emulator.Emulator):
+def test_set_register_to_n(emu: Emulator):
     # Tests assignment
     # Sets all registers from 0-15 to 0,2,4,6,8,...28
     for i in range(15):
@@ -11,7 +11,7 @@ def test_set_register_to_n(emu: emulator.Emulator):
         assert emu.V[i] == i*2
 
 
-def test_add_n_to_register(emu: emulator.Emulator):
+def test_add_n_to_register(emu: Emulator):
     # Tests adding N to a register
     # Adds 2,4,6,8 .... to V[1]
     for i in range(15):
@@ -19,7 +19,7 @@ def test_add_n_to_register(emu: emulator.Emulator):
     assert emu.V[1] == sum([i*2 for i in range(0, 15)])
 
 
-def test_add_n_overflow_to_register(emu: emulator.Emulator):
+def test_add_n_overflow_to_register(emu: Emulator):
     tmp = emu.V[0xF]
     # Add 255 to the register, max is 255 bytes
     emu.execute_opcode(0x71ff)
@@ -33,7 +33,7 @@ def test_add_n_overflow_to_register(emu: emulator.Emulator):
     assert emu.V[0xF] == tmp
 
 
-def test_assign_V_x_to_V_y(emu: emulator.Emulator):
+def test_assign_V_x_to_V_y(emu: Emulator):
     emu.V[3] = 19
     emu.V[12] = 45
     emu.V[4] = 70
@@ -50,7 +50,7 @@ def test_assign_V_x_to_V_y(emu: emulator.Emulator):
     assert emu.V[4] == 70
 
 
-def test_add_vy_to_vx(emu: emulator.Emulator):
+def test_add_vy_to_vx(emu: Emulator):
     # Add Vy to Vx , Vx = Vx + Vy
     # Test for no overflow condition
     for i in range(0, 6):
@@ -65,7 +65,7 @@ def test_add_vy_to_vx(emu: emulator.Emulator):
             assert emu.V[0xF] == 0
 
 
-def test_add_vy_to_vx_overflow(emu: emulator.Emulator):
+def test_add_vy_to_vx_overflow(emu: Emulator):
     emu.V[3] = 231
     emu.V[4] = 81
 
@@ -75,7 +75,7 @@ def test_add_vy_to_vx_overflow(emu: emulator.Emulator):
     assert emu.V[3] == 56
 
 
-def test_sub_vy_from_vx(emu: emulator.Emulator):
+def test_sub_vy_from_vx(emu: Emulator):
     # Subtract Vy from Vx , Vx = Vx - Vy
     # Test for no overflow condition
     for i in range(20, 30):
@@ -90,7 +90,7 @@ def test_sub_vy_from_vx(emu: emulator.Emulator):
             assert emu.V[0xF] == 0
 
 
-def test_sub_vy_from_vx_overflow(emu: emulator.Emulator):
+def test_sub_vy_from_vx_overflow(emu: Emulator):
     emu.V[3] = 81
     emu.V[4] = 231
 
@@ -100,7 +100,7 @@ def test_sub_vy_from_vx_overflow(emu: emulator.Emulator):
     assert emu.V[3] == 106
 
 
-def test_sub_vx_from_vy(emu: emulator.Emulator):
+def test_sub_vx_from_vy(emu: Emulator):
     emu.V[3] = 231
     emu.V[4] = 81
 
@@ -110,7 +110,7 @@ def test_sub_vx_from_vy(emu: emulator.Emulator):
     assert emu.V[4] == 81
 
 
-def test_random_number(emu: emulator.Emulator):
+def test_random_number(emu: Emulator):
     for i in range(20):
         emu.execute_opcode(0xC345)
         if emu.V[3] != 0:

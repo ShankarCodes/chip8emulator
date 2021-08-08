@@ -192,10 +192,3 @@ class Engine:
             f"Exiting....")
         pygame.quit()
         sys.exit(exit_code)
-
-
-if __name__ == '__main__':
-    engine = Engine()
-    engine.load_settings()
-    engine.init()
-    engine.run()
