@@ -134,7 +134,7 @@ class Emulator:
         logger.info(f'I : {self.I}')
         logger.info(f'PC : {hexrepr(self.pc)}')
         logger.info('Registers:')
-        for i in range(15):
+        for i in range(16):
             logger.info(f'V[{i}] = {self.V[i]}')
         logger.info('Stack:')
         logger.info(' '.join([str(i) for i in self.stack]))

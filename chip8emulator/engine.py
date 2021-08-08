@@ -181,6 +181,8 @@ class Engine:
                 x = self.emulator.V[X]
                 y = self.emulator.V[Y]
                 N = (opcode & 0x000F)
+
+                self.emulator.V[0xF] = 0
                 # Draws N+1 lines
                 for i in range(N):
                     line = self.emulator.memory[self.emulator.I + i]
@@ -205,11 +207,17 @@ class Engine:
     def setPixel(self, x, y, val):
         # 64x32 array
         # width of row * row index + column index
-        if self.graphic_memory[y*64 + x] == 1 and val == 1:
-            self.graphic_memory[y*64 + x] = 0
-
-        if self.graphic_memory[y*64 + x] == 0 and val == 1:
-            self.graphic_memory[y*64 + x] = 1
+        # if self.graphic_memory[y*64 + x] == 1 and val == 1:
+        #    self.graphic_memory[y*64 + x] = 0
+        #
+        # if self.graphic_memory[y*64 + x] == 0 and val == 1:
+        #    self.graphic_memory[y*64 + x] = 1
+        old_val = self.graphic_memory[y*64 + x]
+        self.graphic_memory[y*64 + x] ^= val
+        new_val = self.graphic_memory[y*64 + x]
+        # If any pixel changes from 1 to 0, set V[F] to 1
+        if old_val == 1 and new_val == 0:
+            self.emulator.V[0xF] |= 1
 
     def render_tiles(self):
         for x in range(64):
