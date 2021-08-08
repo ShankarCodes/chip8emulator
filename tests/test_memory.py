@@ -178,3 +178,20 @@ def test_loading_registers():
     # Checks if no other register has been modified
     for i in range(5, 16):
         assert emu.V[i] == 0
+
+
+def test_execution_ends_when_pc_greater_than_memory(create_emulator: emulator.Emulator):
+    while create_emulator.execute_opcode_from_memory():
+        pass
+    assert create_emulator.pc == 4096
+
+
+def test_execute_opcode_from_memory(create_emulator: emulator.Emulator):
+    # Test some basic setting of registers
+    create_emulator.load_to_memory(
+        bytearray([0x61, 0x37, 0x62, 0x45, 0x63, 0x1a]))
+    while create_emulator.execute_opcode_from_memory():
+        pass
+    assert create_emulator.V[1] == 0x37
+    assert create_emulator.V[2] == 0x45
+    assert create_emulator.V[3] == 0x1a

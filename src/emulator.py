@@ -13,12 +13,15 @@ def notimpl(op): return logger.warning(
     f'{hexrepr(op)} | External function not implemented')
 
 
-def unknownop(op): return logger.warning(
-    f'{hexrepr(op)} | Not found in the table')
+def unknownop(op):
+    if op == 0:
+        return
+    return logger.warning(
+        f'{hexrepr(op)} | Not found in the table')
 
 
 def debugop(op, msg):
-    return f'{hexrepr(op)} | {msg}'
+    return f'{hexrepr(self.pc)} | {hexrepr(op)} | {msg}'
 
 
 class Emulator:
@@ -47,7 +50,7 @@ class Emulator:
         """
         Initializes the OP Table, call this after implementing external functions, clear, draw, etc.
         """
-        #self.ext_functions.get('clear', notimpl)
+        # self.ext_functions.get('clear', notimpl)
 
         self.op_table = {
             0x0000: self.OP_KKK,
@@ -101,7 +104,7 @@ class Emulator:
         self.memory[offset: offset + len(array_of_bytes)] = array_of_bytes
 
     def execute_opcode(self, opcode):
-        #logger.debug(f'{hexrepr(opcode)} | ')
+        # logger.debug(f'{hexrepr(opcode)} | ')
         if not self.is_init:
             logger.error('Emulator not initialized ! Call init_optable()')
             self.quit(-5)
@@ -143,14 +146,16 @@ class Emulator:
         K = (op & 0xF000) >> 12
         NNN = op & 0x0FFF
         if K == 1:
-            logger.debug(f'{hexrepr(op)} | JUMP {hexrepr(NNN)}')
+            logger.debug(
+                f'{hexrepr(self.pc)} | {hexrepr(op)} | JUMP {hexrepr(NNN)}')
             # Jump to address
             self.pc = op & NNN
             # Already we have jumped, so stay at that position.
             self.pc_increment = 0
         if K == 2:
             # Calls subroutine
-            logger.debug(f'{hexrepr(op)} | CALL {hexrepr(NNN)}')
+            logger.debug(
+                f'{hexrepr(self.pc)} | {hexrepr(op)} | CALL {hexrepr(NNN)}')
             self.stack_pointer += 1
             if(self.stack_pointer >= self.MAX_STACK_SIZE):
                 logger.critical('Stack overflow ! Maximum stack size reached')
@@ -161,11 +166,13 @@ class Emulator:
             self.pc_increment = 0
         if K == 0xA:
             # Sets the value of I = NNN
-            logger.debug(f'{hexrepr(op)} | I = {hexrepr(NNN)}')
+            logger.debug(
+                f'{hexrepr(self.pc)} | {hexrepr(op)} | I = {hexrepr(NNN)}')
             self.I = NNN
         if K == 0xB:
             # PC = V0 + NNN
-            logger.debug(f'{hexrepr(op)} | PC = V0 + {hexrepr(NNN)}')
+            logger.debug(
+                f'{hexrepr(self.pc)} | {hexrepr(op)} | PC = V0 + {hexrepr(NNN)}')
             self.pc = self.V[0] + NNN
             self.pc_increment = 0
 
@@ -176,19 +183,20 @@ class Emulator:
 
         if S == 0xF:
             if KK == 0x1E:
-                logger.debug(f'{hexrepr(op)} | I += V{X}')
+                logger.debug(f'{hexrepr(self.pc)} | {hexrepr(op)} | I += V{X}')
                 # Limit to 16 bits
                 self.I = (self.I + self.V[X]) & 0xFFFF
 
             if KK == 0x29:
-                logger.debug(f'{hexrepr(op)} | I = sprite_addr(V[{X}])')
+                logger.debug(
+                    f'{hexrepr(self.pc)} | {hexrepr(op)} | I = sprite_addr(V[{X}])')
                 self.I = 5*self.V[X]
 
             if KK == 0x33:
                 # Calculates BCD of value at register V[X]
                 # TODO: Check for edge cases, i.e when I = 4096
                 logger.debug(
-                    f'{hexrepr(op)} | I{self.I}, I+1, I+2 = BCD(V{X})')
+                    f'{hexrepr(self.pc)} | {hexrepr(op)} | I{self.I}, I+1, I+2 = BCD(V{X})')
                 self.memory[self.I] = (self.V[X] // 100) % 10
                 self.memory[self.I+1] = (self.V[X] // 10) % 10
                 self.memory[self.I+2] = (self.V[X]) % 10
@@ -196,13 +204,13 @@ class Emulator:
             if KK == 0x55:
                 # Dumps V0 - VX to memory address I
                 logger.debug(
-                    f'{hexrepr(op)} | Dump registers V0-V{X} to {self.I}')
+                    f'{hexrepr(self.pc)} | {hexrepr(op)} | Dump registers V0-V{X} to {self.I}')
                 for i in range(0, X+1):
                     self.memory[self.I+i] = self.V[i]
             if KK == 0x65:
                 # Loads V0 - VX from memory address I
                 logger.debug(
-                    f'{hexrepr(op)} | Load registers V0-V{X} from {self.I}')
+                    f'{hexrepr(self.pc)} | {hexrepr(op)} | Load registers V0-V{X} from {self.I}')
                 for i in range(0, X+1):
                     self.V[i] = self.memory[self.I+i]
 
@@ -213,17 +221,20 @@ class Emulator:
 
         if S == 3:
             if self.V[X] == NN:
-                logger.debug(f'{hexrepr(op)} | IF V[{X}] == {NN} SKIP')
+                logger.debug(
+                    f'{hexrepr(self.pc)} | {hexrepr(op)} | IF V[{X}] == {NN} SKIP')
                 self.pc_increment = 4
         if S == 4:
             if self.V[X] != NN:
-                logger.debug(f'{hexrepr(op)} | IF V[{X}] != {NN} SKIP')
+                logger.debug(
+                    f'{hexrepr(self.pc)} | {hexrepr(op)} | IF V[{X}] != {NN} SKIP')
                 self.pc_increment = 4
         if S == 6:
-            logger.debug(f'{hexrepr(op)} | V[{X}] = {NN}')
+            logger.debug(f'{hexrepr(self.pc)} | {hexrepr(op)} | V[{X}] = {NN}')
             self.V[X] = NN
         if S == 7:
-            logger.debug(f'{hexrepr(op)} | V[{X}] = V[{X}] + {NN}')
+            logger.debug(
+                f'{hexrepr(self.pc)} | {hexrepr(op)} | V[{X}] = V[{X}] + {NN}')
             self.V[X] = (self.V[X] + NN) & 0xff
         if S == 0xC:
             self.V[X] = random.randint(0, 255) & NN
@@ -236,40 +247,48 @@ class Emulator:
 
         if S == 5 and K == 0:
             if self.V[X] == self.V[Y]:
-                logger.debug(f'{hexrepr(op)} | IF V[{X}] == V[{Y}] SKIP')
+                logger.debug(
+                    f'{hexrepr(self.pc)} | {hexrepr(op)} | IF V[{X}] == V[{Y}] SKIP')
                 self.pc_increment = 4
         if S == 9 and K == 0:
             if self.V[X] != self.V[Y]:
-                logger.debug(f'{hexrepr(op)} | IF V[{X}] != V[{Y}] SKIP')
+                logger.debug(
+                    f'{hexrepr(self.pc)} | {hexrepr(op)} | IF V[{X}] != V[{Y}] SKIP')
                 self.pc_increment = 4
 
         if S == 8:
             if K == 0:
                 # Assignment
-                logger.debug(f'{hexrepr(op)} | V[{X}] = V[{Y}]')
+                logger.debug(
+                    f'{hexrepr(self.pc)} | {hexrepr(op)} | V[{X}] = V[{Y}]')
                 self.V[X] = self.V[Y]
             if K == 1:
                 # self.Vx = self.Vx | self.Vy
-                logger.debug(f'{hexrepr(op)} | V[{X}] |= V[{Y}]')
+                logger.debug(
+                    f'{hexrepr(self.pc)} | {hexrepr(op)} | V[{X}] |= V[{Y}]')
                 self.V[X] = self.V[X] | self.V[Y]
             if K == 2:
                 # self.Vx = self.Vx & self.Vy
-                logger.debug(f'{hexrepr(op)} | V[{X}] &= V[{Y}]')
+                logger.debug(
+                    f'{hexrepr(self.pc)} | {hexrepr(op)} | V[{X}] &= V[{Y}]')
                 self.V[X] = self.V[X] & self.V[Y]
             if K == 3:
                 # self.Vx = self.Vx ^ self.Vy
-                logger.debug(f'{hexrepr(op)} | V[{X}] ^= V[{Y}]')
+                logger.debug(
+                    f'{hexrepr(self.pc)} | {hexrepr(op)} | V[{X}] ^= V[{Y}]')
                 self.V[X] = self.V[X] ^ self.V[Y]
             if K == 4:
                 # self.Vx = self.Vx + self.Vy
-                logger.debug(f'{hexrepr(op)} | V[{X}] += V[{Y}]')
+                logger.debug(
+                    f'{hexrepr(self.pc)} | {hexrepr(op)} | V[{X}] += V[{Y}]')
                 if ((self.V[X] + self.V[Y]) > 0xff):
                     self.V[0xF] = 1
                 else:
                     self.V[0xF] = 0
                 self.V[X] = (self.V[X] + self.V[Y]) & 0xFF
             if K == 5:
-                logger.debug(f'{hexrepr(op)} | V[{X}] -= V[{Y}]')
+                logger.debug(
+                    f'{hexrepr(self.pc)} | {hexrepr(op)} | V[{X}] -= V[{Y}]')
                 # self.Vx = self.Vx - self.Vy
                 # logger.debug(
                 #    f'{self.V[X]}, {self.V[Y]} = {self.V[X]-self.V[Y]}')
@@ -281,14 +300,16 @@ class Emulator:
                     self.V[X] = self.V[X] - self.V[Y] + 256
 
             if K == 6:
-                logger.debug(f'{hexrepr(op)} | V[{X}] >> 1')
+                logger.debug(
+                    f'{hexrepr(self.pc)} | {hexrepr(op)} | V[{X}] >> 1')
                 # self.Vx = self.Vx >> 1
                 # Stores LSB in VF (for right shift)
                 self.V[0xF] = self.V[X] & 1
                 self.V[X] = self.V[X] >> 1
             if K == 7:
                 # self.Vx = self.Vy- self.Vx
-                logger.debug(f'{hexrepr(op)} | V[{Y}] - V[{X}]')
+                logger.debug(
+                    f'{hexrepr(self.pc)} | {hexrepr(op)} | V[{Y}] - V[{X}]')
                 if self.V[Y] > self.V[X]:
                     self.V[0xF] = 0
                     self.V[X] = self.V[Y] - self.V[X]
@@ -298,7 +319,8 @@ class Emulator:
             if K == 0xE:
                 # self.Vx = self.Vx << 1
                 # Stores MSB in VF
-                logger.debug(f'{hexrepr(op)} | V[{X}] << 1')
+                logger.debug(
+                    f'{hexrepr(self.pc)} | {hexrepr(op)} | V[{X}] << 1')
                 self.V[0xF] = (self.V[X] & 0b10000000) >> 7
                 # The result is masked with 0xFF (255) so that it remains within a byte.
                 self.V[X] = (self.V[X] << 1) & 0xFF
@@ -310,7 +332,7 @@ class Emulator:
     def OP_RETURN(self, op):
         try:
             logger.info('Return')
-            logger.debug(f'{hexrepr(op)} | Return')
+            logger.debug(f'{hexrepr(self.pc)} | {hexrepr(op)} | Return')
             self.stack_pointer -= 1
             self.pc = self.stack.pop()
         except Exception as e:
@@ -322,16 +344,34 @@ class Emulator:
         logger.info('Stopping emulator...')
         self.ext_functions.get('close', notimpl)(exitcode)
 
+    def execute_opcode_from_memory(self):
+        try:
+            if self.pc >= 4096:
+                # We have reached the end of memory.
+                logger.info(
+                    'No more instructions to execute! Halting emulator')
+                return False
+
+            self.execute_opcode(
+                (self.memory[self.pc] << 8) | self.memory[self.pc+1])
+            return True
+        except Exception as e:
+            logger.exception(
+                'An error occured while fetching and executing opcode')
+            self.variable_dump()
+            self.quit(exitcode=-6)
+            return False
+
 
 if __name__ == '__main__':
     e = Emulator(
         {'fontset': '8JCQkPAgYCAgcPAQ8IDw8BDwEPCQkPAQEPCA8BDw8IDwkPDwECBAQPCQ8JDw8JDwEPDwkPCQkOCQ4JDg8ICAgPDgkJCQ4PCA8IDw8IDwgIA='})
 
-    @e.external('clear')
+    @ e.external('clear')
     def clear_display(opcode):
         logger.debug(debugop(opcode, 'Clearing display'))
 
-    @e.external('close')
+    @ e.external('close')
     def close(opcode):
         sys.exit(opcode)
 
