@@ -44,6 +44,8 @@ class Emulator:
         # Stores the time elapsed, in milliseconds
         self.accumulator = 0
 
+        self.keyboard_snap = [0 for i in range(16)]
+
         # External functions, related to graphics, input, etc.
         self.ext_functions = {}
         self.op_table = {}
@@ -56,7 +58,7 @@ class Emulator:
         # self.ext_functions.get('clear', notimpl)
 
         # NOTE: To prevent exceptions, I have increased the size of the bytearray.
-        #self.emulator.graphic_memory = bytearray(64*32)
+        # self.emulator.graphic_memory = bytearray(64*32)
         self.graphic_memory = bytearray(70*40)
 
         self.op_table = {
@@ -205,6 +207,16 @@ class Emulator:
         X = (op & 0x0F00) >> 8
         KK = (op & 0x00FF)
 
+        if S == 0xE:
+            if KK == 0x9E:
+                # Operation if key() == V[x], then skip the block.
+                if self.keyboard_snap[self.V[X]] == 1:
+                    self.pc_increment = 4
+            if KK == 0xA1:
+                # Operation if key() != V[x], then skip the block.
+                if self.keyboard_snap[self.V[X]] != 1:
+                    self.pc_increment = 4
+
         if S == 0xF:
             if KK == 0x1E:
                 logger.debug(f'{hexrepr(self.pc)} | {hexrepr(op)} | I += V{X}')
@@ -245,6 +257,12 @@ class Emulator:
                 # Sets delay timer value
                 print('Setting')
                 self.delay_timer = self.V[X]
+
+            if KK == 0x0a:
+                # Halting operation, halt all operation until a key is pressed.
+                # If it is pressed store it in V[X]
+                self.settings['is_paused'] = True
+                self.settings['temp'] = X
 
     def OP_XNN(self, op):
         S = (op & 0xF000) >> 12

@@ -95,9 +95,9 @@ def test_rom_loading(emu: Emulator):
     assert emu.memory[0x204] == 0xfd
     assert emu.memory[0x205] == 0x29
     assert emu.memory[0x206] == 0x63
-    assert emu.memory[0x207] == 0x0f
+    assert emu.memory[0x207] == 0x05
     assert emu.memory[0x208] == 0x61
-    assert emu.memory[0x209] == 0x0a
+    assert emu.memory[0x209] == 0x00
     assert emu.memory[0x20a] == 0xd1
     assert emu.memory[0x20b] == 0x34
     assert emu.memory[0x20c] == 0x0f

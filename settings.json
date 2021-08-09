@@ -1,6 +1,6 @@
 {
-	"width": 320,
-	"height": 160,
+	"width": 640,
+	"height": 320,
 	"fps": 60,
 	"title": "Chip-8 Emulator",
 	"creation_flags": [
@@ -14,10 +14,10 @@
 	],
 	"exit_on_error": false,
 	"show_grids": true,
-	"tile_size": 5,
+	"tile_size": 10,
 	"tile_x": 64,
 	"tile_y": 32,
 	"speed_help": "The speed of the interpreter, that is the number of executions per frame , default is 30",
-	"speed": 5,
+	"speed": 10,
 	"fontset": "8JCQkPAgYCAgcPAQ8IDw8BDwEPCQkPAQEPCA8BDw8IDwkPDwECBAQPCQ8JDw8JDwEPDwkPCQkOCQ4JDg8ICAgPDgkJCQ4PCA8IDw8IDwgIA="
 }

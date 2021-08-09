@@ -11,7 +11,7 @@ except ModuleNotFoundError:
 
 
 class Conf:
-    LEVEL = logging.DEBUG
+    LEVEL = logging.INFO
     LOG_PATH = './logs'
     LOG_FORMAT = "%(asctime)s %(name)-20s[%(process)-7d]: [%(filename)+10s:%(lineno)-4d] %(funcName)15s() [%(levelname)-8s]  %(message)s"
     ALL_LOGS = "all"

@@ -172,8 +172,8 @@ class Engine:
             @self.emulator.external('clear')
             def clear_display(opcode):
                 logger.info('Clearing screen')
-                self.screen.fill(pygame.Color('black'))
-                self.emulator.graphic_memory = bytearray(70*40)
+                # self.screen.fill(pygame.Color('black'))
+                self.emulator.graphic_memory = bytearray(64*32)
 
             @self.emulator.external('close')
             def close(opcode):
@@ -205,6 +205,8 @@ class Engine:
             logger.info(f'Emulator:{self.emulator.name}')
             logger.info(f'Emulator version:{self.emulator.version}')
             logger.info("Created emulator")
+
+            self.settings['is_paused'] = False
         except Exception as e:
             logger.exception("An error occured while Initializing")
             self.quit(-1)
@@ -256,20 +258,41 @@ class Engine:
             success = False
             while True:
                 # logger.debug(f'{self.emulator.pc}')
-                for i in range(self.settings['speed']):
-                    success = self.emulator.execute_opcode_from_memory()
-                    if not success:
-                        self.emulator.quit()
-                        self.quit()
+                keys = pygame.key.get_pressed()
+                if keys[K_ESCAPE]:
+                    self.quit()
+
+                if not self.settings['is_paused']:
+                    for i in range(self.settings['speed']):
+                        for k, v in self.keyboard.items():
+                            self.emulator.keyboard_snap[v] = keys[k]
+                        success = self.emulator.execute_opcode_from_memory()
+                        if not success:
+                            self.emulator.quit()
+                            self.quit()
 
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
                         self.quit()
+                    if event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_o:
+                            self.settings['speed'] += 1
+                            logger.info(
+                                f'Increasing speed by 1, New speed: {self.settings["speed"]}')
+                        if event.key == pygame.K_p:
+                            self.settings['speed'] -= 1
+                            logger.info(
+                                f'Decreasing speed by 1, New speed: {self.settings["speed"]}')
 
-                keys = pygame.key.get_pressed()
-                if keys[K_x]:
-                    self.quit()
-
+                if self.settings['is_paused']:
+                    for k, v in self.keyboard.items():
+                        self.emulator.keyboard_snap[v] = keys[k]
+                    for i, k in enumerate(self.emulator.keyboard_snap):
+                        if k == 1:
+                            if self.settings.get('temp') is not None:
+                                self.emulator.V[self.settings.get('temp')] = i
+                                self.settings['is_paused'] = False
+                            break
                 self.screen.fill(pygame.Color('black'))
                 self.render_tiles()
 
@@ -285,6 +308,8 @@ class Engine:
         logger.info(
             f"Exiting....")
         self.emulator.variable_dump()
+        logger.info('Keyboard State')
+        logger.info(self.emulator.keyboard_snap)
 
         pygame.quit()
         sys.exit(exit_code)
