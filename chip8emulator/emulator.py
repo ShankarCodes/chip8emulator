@@ -40,6 +40,9 @@ class Emulator:
         self.memory = bytearray(4096)
         self.fontset = None
         self.font = None
+        self.delay_timer = 0
+        # Stores the time elapsed, in milliseconds
+        self.accumulator = 0
 
         # External functions, related to graphics, input, etc.
         self.ext_functions = {}
@@ -51,6 +54,10 @@ class Emulator:
         Initializes the OP Table, call this after implementing external functions, clear, draw, etc.
         """
         # self.ext_functions.get('clear', notimpl)
+
+        # NOTE: To prevent exceptions, I have increased the size of the bytearray.
+        #self.emulator.graphic_memory = bytearray(64*32)
+        self.graphic_memory = bytearray(70*40)
 
         self.op_table = {
             0x0000: self.OP_KKK,
@@ -120,6 +127,17 @@ class Emulator:
             self.variable_dump()
             self.quit(exitcode=-4)
 
+    def update_delay_timer(self):
+        if self.delay_timer <= 0:
+            self.delay_timer = 0
+        else:
+            if self.accumulator >= 16.66:
+                self.accumulator -= 16.66
+                self.delay_timer -= 1
+
+    def add_time(self, time_in_ms):
+        self.accumulator += time_in_ms
+
     def external(self, func_name):
         # This just uses the decorator pattern to add the function to the table
         # NOTE: Here the wrapper function will execute.
@@ -138,6 +156,11 @@ class Emulator:
             logger.info(f'V[{i}] = {self.V[i]}')
         logger.info('Stack:')
         logger.info(' '.join([str(i) for i in self.stack]))
+        logger.info('-'*50)
+        logger.info('Graphic memory')
+        logger.info('-'*50)
+        logger.info('\n'.join(['']+[' '.join(['%s' % self.graphic_memory[y*64 + x]
+                                              for x in range(64)]) for y in range(32)]))
         logger.info('-'*50)
 
     def OP_KKK(self, op):
@@ -214,6 +237,14 @@ class Emulator:
                     f'{hexrepr(self.pc)} | {hexrepr(op)} | Load registers V0-V{X} from {self.I}')
                 for i in range(0, X+1):
                     self.V[i] = self.memory[self.I+i]
+
+            if KK == 7:
+                # Sets the delay timer value to V[x]
+                self.V[X] = int(self.delay_timer)
+            if KK == 15:
+                # Sets delay timer value
+                print('Setting')
+                self.delay_timer = self.V[X]
 
     def OP_XNN(self, op):
         S = (op & 0xF000) >> 12

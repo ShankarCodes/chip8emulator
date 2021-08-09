@@ -66,6 +66,13 @@ class Engine:
 
     def __init__(self):
         logger.info("creating engine")
+        kc = pygame.key.key_code
+        self.keyboard = {
+            kc('1'): 1, kc('2'): 2, kc('3'): 3, kc('4'): 0xc,
+            kc('q'): 4, kc('w'): 5, kc('e'): 6, kc('r'): 0xd,
+            kc('a'): 7, kc('s'): 8, kc('d'): 9, kc('f'): 0xe,
+            kc('z'): 0xa, kc('x'): 0, kc('c'): 0xb, kc('v'): 0xf,
+        }
 
     def load_settings(self):
         '''
@@ -160,15 +167,13 @@ class Engine:
             logger.info("Created clock")
 
             logger.info("Creating emulator")
-            # NOTE: To prevent exceptions, I have increased the size of the bytearray.
-            #self.graphic_memory = bytearray(64*32)
-            self.graphic_memory = bytearray(70*40)
             self.emulator = Emulator(self.settings)
 
             @self.emulator.external('clear')
             def clear_display(opcode):
                 logger.info('Clearing screen')
                 self.screen.fill(pygame.Color('black'))
+                self.emulator.graphic_memory = bytearray(70*40)
 
             @self.emulator.external('close')
             def close(opcode):
@@ -186,14 +191,14 @@ class Engine:
                 # Draws N+1 lines
                 for i in range(N):
                     line = self.emulator.memory[self.emulator.I + i]
-                    self.setPixel(x + 0, y+i, (line & 0x80) >> 7)
-                    self.setPixel(x + 1, y+i, (line & 0x40) >> 6)
-                    self.setPixel(x + 2, y+i, (line & 0x20) >> 5)
-                    self.setPixel(x + 3, y+i, (line & 0x10) >> 4)
-                    self.setPixel(x + 4, y+i, (line & 0x08) >> 3)
-                    self.setPixel(x + 5, y+i, (line & 0x04) >> 2)
-                    self.setPixel(x + 6, y+i, (line & 0x02) >> 1)
-                    self.setPixel(x + 7, y+i, (line & 0x01))
+                    self.setPixel((x + 0) % 64, (y+i) % 32, (line & 0x80) >> 7)
+                    self.setPixel((x + 1) % 64, (y+i) % 32, (line & 0x40) >> 6)
+                    self.setPixel((x + 2) % 64, (y+i) % 32, (line & 0x20) >> 5)
+                    self.setPixel((x + 3) % 64, (y+i) % 32, (line & 0x10) >> 4)
+                    self.setPixel((x + 4) % 64, (y+i) % 32, (line & 0x08) >> 3)
+                    self.setPixel((x + 5) % 64, (y+i) % 32, (line & 0x04) >> 2)
+                    self.setPixel((x + 6) % 64, (y+i) % 32, (line & 0x02) >> 1)
+                    self.setPixel((x + 7) % 64, (y+i) % 32, (line & 0x01))
 
             self.tile_size = self.settings['tile_size']
             self.emulator.init_optable()
@@ -207,14 +212,21 @@ class Engine:
     def setPixel(self, x, y, val):
         # 64x32 array
         # width of row * row index + column index
-        # if self.graphic_memory[y*64 + x] == 1 and val == 1:
-        #    self.graphic_memory[y*64 + x] = 0
+        # if self.emulator.graphic_memory[y*64 + x] == 1 and val == 1:
+        #    self.emulator.graphic_memory[y*64 + x] = 0
         #
-        # if self.graphic_memory[y*64 + x] == 0 and val == 1:
-        #    self.graphic_memory[y*64 + x] = 1
-        old_val = self.graphic_memory[y*64 + x]
-        self.graphic_memory[y*64 + x] ^= val
-        new_val = self.graphic_memory[y*64 + x]
+        # if self.emulator.graphic_memory[y*64 + x] == 0 and val == 1:
+        #    self.emulator.graphic_memory[y*64 + x] = 1
+        old_val = self.emulator.graphic_memory[y*64 + x]
+        self.emulator.graphic_memory[y*64 + x] ^= val
+        # if old_val == 1 and val == 1:
+        #    self.emulator.graphic_memory[y*64 + x] = 0
+        #    self.emulator.V[0xF] = 1
+        # if old_val == 1 and val == 0:
+        #    self.emulator.graphic_memory[y*64 + x] = 1
+        # else:
+        #    self.emulator.graphic_memory[y*64 + x] = val
+        new_val = self.emulator.graphic_memory[y*64 + x]
         # If any pixel changes from 1 to 0, set V[F] to 1
         if old_val == 1 and new_val == 0:
             self.emulator.V[0xF] |= 1
@@ -222,7 +234,7 @@ class Engine:
     def render_tiles(self):
         for x in range(64):
             for y in range(32):
-                if self.graphic_memory[y*64 + x] != 0:
+                if self.emulator.graphic_memory[y*64 + x] != 0:
                     pygame.draw.rect(self.screen, pygame.Color(
                         'white'), (x*self.tile_size, y*self.tile_size, self.tile_size, self.tile_size))
 
@@ -258,9 +270,13 @@ class Engine:
                 if keys[K_x]:
                     self.quit()
 
+                self.screen.fill(pygame.Color('black'))
                 self.render_tiles()
+
                 pygame.display.flip()
                 dt = self.clock.tick(self.settings['fps'])
+                self.emulator.add_time(dt)
+                self.emulator.update_delay_timer()
         except Exception as e:
             logger.exception(
                 f"An error occured while running the emulator!")
@@ -269,11 +285,6 @@ class Engine:
         logger.info(
             f"Exiting....")
         self.emulator.variable_dump()
-        logger.info('Graphic memory')
-        for y in range(32):
-            for x in range(64):
-                print(self.graphic_memory[y*64 + x], end=' ')
-            print()
 
         pygame.quit()
         sys.exit(exit_code)
